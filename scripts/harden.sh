@@ -13,6 +13,7 @@ ADMIN_USER="debian"
 AGENT_USER="factory"
 SWAP_SIZE="4G"
 
+# Output helpers: step header, warning, fatal error.
 log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33m[warn] %s\033[0m\n' "$*" >&2; }
 die()  { printf '\033[1;31m[error] %s\033[0m\n' "$*" >&2; exit 1; }
@@ -20,6 +21,7 @@ die()  { printf '\033[1;31m[error] %s\033[0m\n' "$*" >&2; exit 1; }
 export DEBIAN_FRONTEND=noninteractive
 APT_OPTS=(-y -o DPkg::Lock::Timeout=300 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold)
 
+# Refuses to run unless root on Debian and the admin user can log in with a key.
 preflight() {
   [[ $EUID -eq 0 ]] || die "Run as root: sudo bash harden.sh"
   grep -q '^ID=debian' /etc/os-release || die "This script expects Debian."
@@ -28,6 +30,7 @@ preflight() {
     || die "/home/$ADMIN_USER/.ssh/authorized_keys is empty. Run 'ssh-copy-id ${ADMIN_USER}@<IP>' first, otherwise disabling passwords locks you out."
 }
 
+# Sets the hostname, upgrades the system and installs packages (incl. gh).
 step_base() {
   log "1/10 Hostname, upgrade, packages"
   hostnamectl set-hostname "$HOSTNAME_NEW"
@@ -61,6 +64,7 @@ step_base() {
   apt-get "${APT_OPTS[@]}" install gh
 }
 
+# Enables daily automatic upgrades without auto-reboot.
 step_unattended() {
   log "2/10 Unattended upgrades (Debian defaults: stable + security, no auto-reboot)"
   cat > /etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
@@ -71,6 +75,7 @@ EOF
   systemctl enable --now unattended-upgrades >/dev/null
 }
 
+# Creates the agent user without sudo and gives it the admin SSH keys.
 step_agent_user() {
   log "3/10 User $AGENT_USER (no sudo)"
   id "$AGENT_USER" >/dev/null 2>&1 || useradd -m -U -s /bin/bash "$AGENT_USER"
@@ -83,6 +88,7 @@ step_agent_user() {
   loginctl enable-linger "$AGENT_USER"
 }
 
+# Key-only SSH, no root, only the two users; rolls back if the config is invalid.
 step_sshd() {
   log "4/10 SSH hardening"
   # 10-* is read before 50-cloud-init.conf; the first value wins in sshd.
@@ -104,6 +110,7 @@ EOF
   systemctl reload ssh
 }
 
+# Denies all incoming traffic except rate-limited SSH.
 step_ufw() {
   log "5/10 Firewall (ufw)"
   ufw default deny incoming >/dev/null
@@ -112,6 +119,7 @@ step_ufw() {
   ufw --force enable >/dev/null
 }
 
+# Bans IPs after repeated failed SSH logins.
 step_fail2ban() {
   log "6/10 fail2ban"
   cat > /etc/fail2ban/jail.d/sshd.local <<'EOF'
@@ -126,6 +134,7 @@ EOF
   systemctl restart fail2ban
 }
 
+# Adds a swap file and caps the journal size (small disk).
 step_swap_journald() {
   log "7/10 Swap $SWAP_SIZE, journald limit"
   if ! swapon --show=NAME --noheadings | grep -qx /swapfile; then
@@ -141,6 +150,7 @@ step_swap_journald() {
   systemctl restart systemd-journald
 }
 
+# Network sysctl hardening, noexec /dev/shm, AppArmor check.
 step_kernel() {
   log "8/10 Kernel and shared memory hardening"
   cat > /etc/sysctl.d/99-factory.conf <<'EOF'
@@ -166,6 +176,7 @@ EOF
     || warn "AppArmor is not enabled in the kernel."
 }
 
+# Logs sudo commands and disables rpcbind.
 step_misc() {
   log "9/10 Sudo logging, unused services"
   local f=/etc/sudoers.d/99-logging
@@ -177,6 +188,7 @@ step_misc() {
   systemctl disable --now rpcbind.socket rpcbind.service >/dev/null 2>&1 || true
 }
 
+# Prints the effective SSH, firewall and fail2ban state and open ports.
 step_verify() {
   log "10/10 Checks"
   echo "--- sshd"
@@ -193,6 +205,7 @@ step_verify() {
   log "Hardening done. Next: setup-agent.sh as $AGENT_USER (docs/vps-setup.md)."
 }
 
+# Parses arguments and runs all steps in order.
 main() {
   case "${1:-}" in
     -h|--help) sed -n '2,8p' "$0"; exit 0 ;;

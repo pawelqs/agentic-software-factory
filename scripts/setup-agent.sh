@@ -11,6 +11,7 @@ GIT_NAME="ellie-7894"
 GIT_EMAIL="355491988+ellie-7894@users.noreply.github.com"
 CFG="$HOME/.config/factory"
 
+# Output helpers: step header, warning, fatal error.
 log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33m[warn] %s\033[0m\n' "$*" >&2; }
 die()  { printf '\033[1;31m[error] %s\033[0m\n' "$*" >&2; exit 1; }

@@ -15,9 +15,13 @@ OVH VPS-1 (BHS), Debian 13. [`harden.sh`](../scripts/harden.sh) and [`setup-agen
 
 ## 2. Hardening
 
+On the VPS as `debian` (`ssh -t debian@<IP>`). The image may not ship git, so install it first:
+
 ```bash
-scp scripts/harden.sh debian@<IP>:
-ssh -t debian@<IP> 'sudo bash harden.sh'
+sudo apt-get -o DPkg::Lock::Timeout=300 update && sudo apt-get install -y git
+git clone https://github.com/pawelqs/agentic-software-factory
+cd agentic-software-factory
+sudo bash scripts/harden.sh
 ```
 
 SSH moves from port 22 to 22722. The current session stays open; new connections need the new port.
@@ -26,7 +30,18 @@ SSH moves from port 22 to 22722. The current session stays open; new connections
 - [ ] **Keep this session open.** In a new terminal: `ssh -p 22722 debian@<IP>` works with the key.
 - [ ] If it prints "Reboot required": `sudo reboot`, then run it again (it should pass without changes).
 
-## 3. Laptop
+## 3. Agent tools
+
+In the same session, from the clone. The script is copied because `factory` may not be able to read `/home/debian`:
+
+```bash
+sudo install -o factory -g factory -m 755 scripts/setup-agent.sh /home/factory/
+sudo -iu factory bash setup-agent.sh
+```
+
+- [ ] No `MISSING` in the checks (except maybe `herdr`).
+
+## 4. Laptop
 
 - [ ] `~/.ssh/config` (`IdentitiesOnly` stops the client from offering every agent key; failed offers count towards fail2ban bans):
   ```
@@ -41,15 +56,6 @@ SSH moves from port 22 to 22722. The current session stays open; new connections
       User debian
   ```
 - [ ] `ssh factory-admin` and `ssh factory` work.
-
-## 4. Agent tools
-
-```bash
-scp scripts/setup-agent.sh factory:
-ssh factory 'bash setup-agent.sh'
-```
-
-- [ ] No `MISSING` in the checks (except maybe `herdr`).
 - [ ] Herdr (if installed): `herdr machine add factory`, then `herdr --remote factory`.
 
 ## 5. Secrets (on the VPS as `factory`)
@@ -67,7 +73,7 @@ Both go to `~/.config/factory/env` (chmod 600, created by `setup-agent.sh`), whi
 ## 6. Finally
 
 - [ ] Snapshot in the OVH panel (only one is kept, ~1.30 PLN net/month).
-- [ ] Idempotency test: `ssh -t factory-admin 'sudo bash harden.sh'` and `ssh factory 'bash setup-agent.sh'` pass a second time without errors.
+- [ ] Idempotency test: `ssh -t factory-admin 'cd agentic-software-factory && git pull && sudo bash scripts/harden.sh'` and `ssh factory 'bash setup-agent.sh'` pass a second time without errors.
 
 ## Open
 

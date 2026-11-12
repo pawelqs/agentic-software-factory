@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Hardening of the factory VPS (OVH VPS-1, Debian 13). Based on the homelab RPi hardening script.
 #
-# Usage (from the laptop):
-#   scp scripts/harden.sh debian@<IP>: && ssh -t debian@<IP> 'sudo bash harden.sh'
-# SSH then moves to port 22722 (SSH_PORT): reruns need scp -P 22722 / ssh -p 22722.
+# Usage (on the VPS as the admin user, from a clone of this repo):
+#   sudo bash scripts/harden.sh
+# SSH then moves to port 22722 (SSH_PORT); reconnect with ssh -p 22722.
 # Then install the agent tools as the agent user: setup-agent.sh
 #
 # Idempotent: safe to run again. Manual steps: docs/vps-setup.md
@@ -50,7 +50,7 @@ step_base() {
   apt-get "${APT_OPTS[@]}" full-upgrade
   # The agent user has no sudo, so system packages it needs are installed here.
   apt-get "${APT_OPTS[@]}" install \
-    ufw fail2ban python3-systemd unattended-upgrades apparmor \
+    ufw fail2ban python3-systemd nftables unattended-upgrades apparmor \
     git tmux build-essential ripgrep jq curl unzip ca-certificates
 
   # gh from the official GitHub apt repo
@@ -97,7 +97,7 @@ step_sshd() {
   if systemctl is-active --quiet ssh.socket; then
     die "ssh.socket is active; this script expects ssh.service. Disable the socket first."
   fi
-  # 10-* is read before 50-cloud-init.conf; the first value wins in sshd.
+  # 10-* is read before 50-cloud-init.conf; the first value wins in sshd (Port is additive: no other Port line exists).
   local conf=/etc/ssh/sshd_config.d/10-hardening.conf
   cat > "$conf" <<EOF
 Port $SSH_PORT

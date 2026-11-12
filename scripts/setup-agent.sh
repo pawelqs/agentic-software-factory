@@ -2,7 +2,8 @@
 # Agent tools for the factory user: bun, Claude Code, uv, Herdr, git config, shell env.
 #
 # Run as the agent user (no sudo), after harden.sh:
-#   scp scripts/setup-agent.sh factory: && ssh factory 'bash setup-agent.sh'   (host alias from docs/vps-setup.md)
+#   sudo install -o factory -g factory -m 755 scripts/setup-agent.sh /home/factory/
+#   sudo -iu factory bash setup-agent.sh
 #
 # Idempotent: safe to run again. Manual steps: docs/vps-setup.md
 set -euo pipefail

@@ -2,7 +2,7 @@
 # Hardening of the factory VPS (OVH VPS-1, Debian 13). Based on the homelab RPi hardening script.
 #
 # Usage (from the laptop):
-#   scp harden.sh debian@<IP>: && ssh -t debian@<IP> 'sudo bash harden.sh'
+#   scp scripts/harden.sh debian@<IP>: && ssh -t debian@<IP> 'sudo bash harden.sh'
 # Then install the agent tools as the agent user: setup-agent.sh
 #
 # Idempotent: safe to run again. Manual steps: docs/vps-setup.md

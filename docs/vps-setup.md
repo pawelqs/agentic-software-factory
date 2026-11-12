@@ -1,6 +1,6 @@
 # Factory VPS: checklist
 
-OVH VPS-1 (BHS), Debian 13. [`harden.sh`](../harden.sh) and [`setup-agent.sh`](../setup-agent.sh) do most of the work. This file lists the steps the scripts can't do, in order.
+OVH VPS-1 (BHS), Debian 13. [`harden.sh`](../scripts/harden.sh) and [`setup-agent.sh`](../scripts/setup-agent.sh) do most of the work. This file lists the steps the scripts can't do, in order.
 
 **Users:** `debian` (admin, sudo) and `factory` (agents, no sudo).
 **Open to the internet:** only SSH (22/tcp): key-only, rate-limited by ufw, fail2ban.
@@ -16,7 +16,7 @@ OVH VPS-1 (BHS), Debian 13. [`harden.sh`](../harden.sh) and [`setup-agent.sh`](.
 ## 2. Hardening
 
 ```bash
-scp harden.sh debian@<IP>:
+scp scripts/harden.sh debian@<IP>:
 ssh -t debian@<IP> 'sudo bash harden.sh'
 ```
 
@@ -27,7 +27,7 @@ ssh -t debian@<IP> 'sudo bash harden.sh'
 ## 3. Agent tools
 
 ```bash
-scp setup-agent.sh factory@<IP>:
+scp scripts/setup-agent.sh factory@<IP>:
 ssh factory@<IP> 'bash setup-agent.sh'
 ```
 

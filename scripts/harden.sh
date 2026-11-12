@@ -110,9 +110,11 @@ EOF
   systemctl reload ssh
 }
 
-# Denies all incoming traffic except rate-limited SSH.
+# Resets ufw, then denies all incoming traffic except rate-limited SSH.
 step_ufw() {
   log "5/10 Firewall (ufw)"
+  # Start from a clean state so the rules below are the only ones (reset also disables ufw).
+  ufw --force reset >/dev/null
   ufw default deny incoming >/dev/null
   ufw default allow outgoing >/dev/null
   ufw limit 22/tcp comment 'ssh' >/dev/null

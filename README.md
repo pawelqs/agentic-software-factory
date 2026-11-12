@@ -1,7 +1,7 @@
 # agentic-software-factory
 
-Agenci kodujący na osobnym VPS-ie: zadanie → plan → implementacja → testy → review → PR. Merge ręcznie.
+Coding agents on a dedicated VPS: task → plan → implementation → tests → review → PR. Merges are manual.
 
-- [`bootstrap.sh`](bootstrap.sh): stawianie i hardening VPS-a (Debian 13)
-- [`docs/vps-setup.md`](docs/vps-setup.md): checklista kroków ręcznych
-- [`tailscale/policy.hujson`](tailscale/policy.hujson): fragment polityki tailnetu
+- [`harden.sh`](harden.sh): VPS hardening and system packages (Debian 13, run as root)
+- [`setup-agent.sh`](setup-agent.sh): agent tools for the `factory` user (no sudo)
+- [`docs/vps-setup.md`](docs/vps-setup.md): checklist of manual steps

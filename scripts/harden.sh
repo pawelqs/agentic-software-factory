@@ -3,7 +3,7 @@
 #
 # Usage (on the VPS as the admin user, from a clone of this repo):
 #   sudo bash scripts/harden.sh
-# SSH then moves to port 22722 (SSH_PORT); reconnect with ssh -p 22722.
+# SSH then moves to port 822 (SSH_PORT); reconnect with ssh -p 822.
 # Then install the agent tools as the agent user: setup-agent.sh
 #
 # Idempotent: safe to run again. Manual steps: docs/vps-setup.md
@@ -13,7 +13,8 @@ HOSTNAME_NEW="factory"
 ADMIN_USER="debian"
 AGENT_USER="factory"
 SWAP_SIZE="4G"
-SSH_PORT="22722"
+# Below 1024: only root can bind it, so a non-root agent cannot fake sshd while it is down.
+SSH_PORT="822"
 
 # Output helpers: step header, warning, fatal error.
 log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }

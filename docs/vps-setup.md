@@ -3,7 +3,7 @@
 OVH VPS-1 (BHS), Debian 13. [`harden.sh`](../scripts/harden.sh) and [`setup-agent.sh`](../scripts/setup-agent.sh) do most of the work. This file lists the steps the scripts can't do, in order.
 
 **Users:** `debian` (admin, sudo) and `factory` (agents, no sudo).
-**Open to the internet:** only SSH on port 22722 (`SSH_PORT` in `harden.sh`): key-only, rate-limited by ufw, fail2ban.
+**Open to the internet:** only SSH on port 822 (`SSH_PORT` in `harden.sh`): key-only, rate-limited by ufw, fail2ban.
 
 > **Rescue:** KVM console in the OVH panel (VPS → "KVM") or rescue mode. Find both before you start.
 
@@ -24,10 +24,10 @@ cd agentic-software-factory
 sudo bash scripts/harden.sh
 ```
 
-SSH moves from port 22 to 22722. The current session stays open; new connections need the new port.
+SSH moves from port 22 to 822. The current session stays open; new connections need the new port.
 
-- [ ] The script reaches "Hardening done"; `ss -tulpn` shows nothing public except sshd on 22722.
-- [ ] **Keep this session open.** In a new terminal: `ssh -p 22722 debian@<IP>` works with the key.
+- [ ] The script reaches "Hardening done"; `ss -tulpn` shows nothing public except sshd on 822.
+- [ ] **Keep this session open.** In a new terminal: `ssh -p 822 debian@<IP>` works with the key.
 - [ ] If it prints "Reboot required": `sudo reboot`, then run it again (it should pass without changes).
 
 ## 3. Agent tools
@@ -47,7 +47,7 @@ sudo -iu factory bash setup-agent.sh
   ```
   Host factory factory-admin
       HostName <IP>
-      Port 22722
+      Port 822
       IdentityFile ~/.ssh/<your key>
       IdentitiesOnly yes
   Host factory

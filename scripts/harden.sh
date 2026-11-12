@@ -199,7 +199,7 @@ EOF
     || warn "AppArmor is not enabled in the kernel."
 }
 
-# Logs sudo commands and disables rpcbind.
+# Logs sudo commands, disables rpcbind and LLMNR.
 step_misc() {
   log "9/10 Sudo logging, unused services"
   local f=/etc/sudoers.d/99-logging
@@ -209,6 +209,13 @@ step_misc() {
   mv "$f.tmp" "$f"
 
   systemctl disable --now rpcbind.socket rpcbind.service >/dev/null 2>&1 || true
+
+  # LLMNR (local-network name resolution, port 5355 on all interfaces) is useless on a VPS.
+  if systemctl is-active --quiet systemd-resolved; then
+    install -d -m 755 /etc/systemd/resolved.conf.d
+    printf '[Resolve]\nLLMNR=no\n' > /etc/systemd/resolved.conf.d/no-llmnr.conf
+    systemctl restart systemd-resolved
+  fi
 }
 
 # Prints the effective SSH, firewall and fail2ban state and open ports.

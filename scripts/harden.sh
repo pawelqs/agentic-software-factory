@@ -3,7 +3,7 @@
 #
 # Usage (on the VPS as the admin user, from a clone of this repo):
 #   sudo bash scripts/harden.sh
-# SSH then moves to port 22722 (SSH_PORT); reconnect with ssh -p 22722.
+# SSH then moves to port 822 (SSH_PORT); reconnect with ssh -p 822.
 # Then install the agent tools as the agent user: setup-agent.sh
 #
 # Idempotent: safe to run again. Manual steps: docs/vps-setup.md
@@ -13,7 +13,8 @@ HOSTNAME_NEW="factory"
 ADMIN_USER="debian"
 AGENT_USER="factory"
 SWAP_SIZE="4G"
-SSH_PORT="22722"
+# Below 1024: only root can bind it, so a non-root agent cannot fake sshd while it is down.
+SSH_PORT="822"
 
 # Output helpers: step header, warning, fatal error.
 log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
@@ -198,7 +199,7 @@ EOF
     || warn "AppArmor is not enabled in the kernel."
 }
 
-# Logs sudo commands and disables rpcbind.
+# Logs sudo commands, disables rpcbind and LLMNR.
 step_misc() {
   log "9/10 Sudo logging, unused services"
   local f=/etc/sudoers.d/99-logging
@@ -208,6 +209,13 @@ step_misc() {
   mv "$f.tmp" "$f"
 
   systemctl disable --now rpcbind.socket rpcbind.service >/dev/null 2>&1 || true
+
+  # LLMNR (local-network name resolution, port 5355 on all interfaces) is useless on a VPS.
+  if systemctl is-active --quiet systemd-resolved; then
+    install -d -m 755 /etc/systemd/resolved.conf.d
+    printf '[Resolve]\nLLMNR=no\n' > /etc/systemd/resolved.conf.d/no-llmnr.conf
+    systemctl restart systemd-resolved
+  fi
 }
 
 # Prints the effective SSH, firewall and fail2ban state and open ports.

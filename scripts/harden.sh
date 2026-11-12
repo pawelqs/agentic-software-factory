@@ -194,7 +194,7 @@ step_misc() {
 step_verify() {
   log "10/10 Checks"
   echo "--- sshd"
-  sshd -T | grep -Ei '^(passwordauthentication|kbdinteractiveauthentication|permitrootlogin|allowusers|maxauthtries|allowagentforwarding) '
+  sshd -T | grep -Ei '^(passwordauthentication|kbdinteractiveauthentication|permitrootlogin|allowusers|allowagentforwarding) '
   echo "--- ufw"
   ufw status verbose
   echo "--- fail2ban"

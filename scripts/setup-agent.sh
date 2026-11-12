@@ -21,7 +21,7 @@ cd ~
 export PATH="$HOME/.local/bin:$HOME/.bun/bin:$PATH"
 
 log "1/4 bun, Claude Code, uv, Herdr"
-# SHELL=/bin/sh stops the bun installer from editing shell rc files; PATH is set in shellrc.
+# ~/.bun/bin is already on PATH, so the bun installer skips editing shell rc files (SHELL=/bin/sh is a fallback).
 [[ -x ~/.bun/bin/bun ]] || curl -fsSL https://bun.sh/install | env SHELL=/bin/sh bash
 [[ -x ~/.local/bin/claude ]] || curl -fsSL https://claude.ai/install.sh | bash
 [[ -x ~/.local/bin/uv ]] || curl -LsSf https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh

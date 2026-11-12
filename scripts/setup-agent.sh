@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Agent tools for the factory user: mise + Node, Claude Code, uv, Herdr, git config, shell env.
+# Agent tools for the factory user: bun, Claude Code, uv, Herdr, git config, shell env.
 #
 # Run as the agent user (no sudo), after harden.sh:
 #   scp scripts/setup-agent.sh factory@<IP>: && ssh factory@<IP> 'bash setup-agent.sh'
@@ -18,11 +18,11 @@ die()  { printf '\033[1;31m[error] %s\033[0m\n' "$*" >&2; exit 1; }
 
 [[ $EUID -ne 0 ]] || die "Run as the agent user, not root."
 cd ~
-export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.bun/bin:$PATH"
 
-log "1/4 mise + Node, Claude Code, uv, Herdr"
-[[ -x ~/.local/bin/mise ]] || curl -fsSL https://mise.run | sh
-mise use -g node@lts
+log "1/4 bun, Claude Code, uv, Herdr"
+# SHELL=/bin/sh stops the bun installer from editing shell rc files; PATH is set in shellrc.
+[[ -x ~/.bun/bin/bun ]] || curl -fsSL https://bun.sh/install | env SHELL=/bin/sh bash
 [[ -x ~/.local/bin/claude ]] || curl -fsSL https://claude.ai/install.sh | bash
 [[ -x ~/.local/bin/uv ]] || curl -LsSf https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh
 # Herdr is not critical: a broken installer must not stop the setup.
@@ -42,7 +42,7 @@ log "3/4 Shell environment"
 install -d -m 700 "$HOME/.config" "$CFG"
 cat > "$CFG/shellrc" <<'EOF'
 # Managed by setup-agent.sh. Sourced at the top of ~/.bashrc, so it also works for 'ssh factory cmd'.
-for d in "$HOME/.local/share/mise/shims" "$HOME/.local/bin"; do
+for d in "$HOME/.bun/bin" "$HOME/.local/bin"; do
   case ":$PATH:" in *":$d:"*) ;; *) PATH="$d:$PATH" ;; esac
 done
 export PATH
@@ -68,7 +68,7 @@ fi
 
 log "4/4 Checks (fresh login shell)"
 env -i HOME="$HOME" USER="$USER" LOGNAME="$USER" PATH=/usr/bin:/bin bash -lc '
-  for c in node claude uv gh git tmux herdr; do
+  for c in bun claude uv gh git tmux herdr; do
     printf "%-7s " "$c"
     if ! command -v "$c" >/dev/null; then echo MISSING; continue; fi
     if [ "$c" = tmux ]; then tmux -V; else "$c" --version 2>&1 | head -n1; fi

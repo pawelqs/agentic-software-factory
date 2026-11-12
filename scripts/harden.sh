@@ -49,7 +49,7 @@ step_base() {
   # The agent user has no sudo, so system packages it needs are installed here.
   apt-get "${APT_OPTS[@]}" install \
     ufw fail2ban python3-systemd unattended-upgrades apparmor \
-    git tmux build-essential ripgrep jq curl ca-certificates
+    git tmux build-essential ripgrep jq curl unzip ca-certificates
 
   # gh from the official GitHub apt repo
   install -d -m 755 /etc/apt/keyrings

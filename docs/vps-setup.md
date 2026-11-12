@@ -3,7 +3,7 @@
 OVH VPS-1 (BHS), Debian 13. [`harden.sh`](../scripts/harden.sh) and [`setup-agent.sh`](../scripts/setup-agent.sh) do most of the work. This file lists the steps the scripts can't do, in order.
 
 **Users:** `debian` (admin, sudo) and `factory` (agents, no sudo).
-**Open to the internet:** only SSH (22/tcp): key-only, rate-limited by ufw, fail2ban.
+**Open to the internet:** only SSH on port 22722 (`SSH_PORT` in `harden.sh`): key-only, rate-limited by ufw, fail2ban.
 
 > **Rescue:** KVM console in the OVH panel (VPS → "KVM") or rescue mode. Find both before you start.
 
@@ -20,25 +20,19 @@ scp scripts/harden.sh debian@<IP>:
 ssh -t debian@<IP> 'sudo bash harden.sh'
 ```
 
-- [ ] The script reaches "Hardening done"; `ss -tulpn` shows nothing public except sshd.
-- [ ] **Keep this session open.** In a new terminal: `ssh debian@<IP>` still works with the key.
+SSH moves from port 22 to 22722. The current session stays open; new connections need the new port.
+
+- [ ] The script reaches "Hardening done"; `ss -tulpn` shows nothing public except sshd on 22722.
+- [ ] **Keep this session open.** In a new terminal: `ssh -p 22722 debian@<IP>` works with the key.
 - [ ] If it prints "Reboot required": `sudo reboot`, then run it again (it should pass without changes).
 
-## 3. Agent tools
-
-```bash
-scp scripts/setup-agent.sh factory@<IP>:
-ssh factory@<IP> 'bash setup-agent.sh'
-```
-
-- [ ] No `MISSING` in the checks (except maybe `herdr`).
-
-## 4. Laptop
+## 3. Laptop
 
 - [ ] `~/.ssh/config` (`IdentitiesOnly` stops the client from offering every agent key; failed offers count towards fail2ban bans):
   ```
   Host factory factory-admin
       HostName <IP>
+      Port 22722
       IdentityFile ~/.ssh/<your key>
       IdentitiesOnly yes
   Host factory
@@ -46,6 +40,16 @@ ssh factory@<IP> 'bash setup-agent.sh'
   Host factory-admin
       User debian
   ```
+- [ ] `ssh factory-admin` and `ssh factory` work.
+
+## 4. Agent tools
+
+```bash
+scp scripts/setup-agent.sh factory:
+ssh factory 'bash setup-agent.sh'
+```
+
+- [ ] No `MISSING` in the checks (except maybe `herdr`).
 - [ ] Herdr (if installed): `herdr machine add factory`, then `herdr --remote factory`.
 
 ## 5. Secrets (on the VPS as `factory`)

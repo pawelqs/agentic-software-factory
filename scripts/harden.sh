@@ -3,6 +3,7 @@
 #
 # Usage (from the laptop):
 #   scp scripts/harden.sh debian@<IP>: && ssh -t debian@<IP> 'sudo bash harden.sh'
+# SSH then moves to port 22722 (SSH_PORT): reruns need scp -P 22722 / ssh -p 22722.
 # Then install the agent tools as the agent user: setup-agent.sh
 #
 # Idempotent: safe to run again. Manual steps: docs/vps-setup.md
@@ -12,6 +13,7 @@ HOSTNAME_NEW="factory"
 ADMIN_USER="debian"
 AGENT_USER="factory"
 SWAP_SIZE="4G"
+SSH_PORT="22722"
 
 # Output helpers: step header, warning, fatal error.
 log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
@@ -88,12 +90,17 @@ step_agent_user() {
   loginctl enable-linger "$AGENT_USER"
 }
 
-# Key-only SSH, no root, only the two users; rolls back if the config is invalid.
+# Key-only SSH on $SSH_PORT, no root, only the two users; rolls back if sshd can't use the config.
 step_sshd() {
-  log "4/10 SSH hardening"
+  log "4/10 SSH hardening (port $SSH_PORT)"
+  # With socket activation the port comes from ssh.socket and Port below would be ignored.
+  if systemctl is-active --quiet ssh.socket; then
+    die "ssh.socket is active; this script expects ssh.service. Disable the socket first."
+  fi
   # 10-* is read before 50-cloud-init.conf; the first value wins in sshd.
   local conf=/etc/ssh/sshd_config.d/10-hardening.conf
   cat > "$conf" <<EOF
+Port $SSH_PORT
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 PubkeyAuthentication yes
@@ -108,25 +115,38 @@ EOF
     die "sshd config test failed. Removed $conf, not reloading."
   fi
   systemctl reload ssh
+
+  # Open sessions survive the reload. Make sure new ones can connect before ufw closes port 22.
+  local i
+  for i in {1..10}; do
+    ss -Htln "sport = :$SSH_PORT" | grep -q . && return 0
+    sleep 1
+  done
+  # sshd may have exited after a failed bind, so restart (open sessions survive it) instead of reload.
+  rm -f "$conf"
+  systemctl restart ssh || true
+  die "sshd is not listening on port $SSH_PORT. Removed $conf and restarted ssh."
 }
 
-# Resets ufw, then denies all incoming traffic except rate-limited SSH.
+# Resets ufw, then denies all incoming traffic except rate-limited SSH on $SSH_PORT.
 step_ufw() {
   log "5/10 Firewall (ufw)"
   # Start from a clean state so the rules below are the only ones (reset also disables ufw).
   ufw --force reset >/dev/null
   ufw default deny incoming >/dev/null
   ufw default allow outgoing >/dev/null
-  ufw limit 22/tcp comment 'ssh' >/dev/null
+  ufw limit "$SSH_PORT/tcp" comment 'ssh' >/dev/null
   ufw --force enable >/dev/null
 }
 
 # Bans IPs after repeated failed SSH logins.
 step_fail2ban() {
   log "6/10 fail2ban"
-  cat > /etc/fail2ban/jail.d/sshd.local <<'EOF'
+  # The default jail bans on port 22 only.
+  cat > /etc/fail2ban/jail.d/sshd.local <<EOF
 [sshd]
 enabled = true
+port = $SSH_PORT
 backend = systemd
 maxretry = 3
 findtime = 600
@@ -194,7 +214,7 @@ step_misc() {
 step_verify() {
   log "10/10 Checks"
   echo "--- sshd"
-  sshd -T | grep -Ei '^(passwordauthentication|kbdinteractiveauthentication|permitrootlogin|allowusers|allowagentforwarding) '
+  sshd -T | grep -Ei '^(passwordauthentication|kbdinteractiveauthentication|port|permitrootlogin|allowusers|allowagentforwarding) '
   echo "--- ufw"
   ufw status verbose
   echo "--- fail2ban"
@@ -210,7 +230,7 @@ step_verify() {
 # Parses arguments and runs all steps in order.
 main() {
   case "${1:-}" in
-    -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
     "") ;;
     *) die "Unknown argument: $1" ;;
   esac

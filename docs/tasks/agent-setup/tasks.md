@@ -13,8 +13,8 @@ Agent definitions (`claude/`), launcher (`scripts/start-task.sh`) and their inst
 - [x] Plan (inline below, no plan review: bootstrap)
 - [x] Acceptance tests — n/a (markdown + shell); start-task.sh tested locally with a fake `claude`; `claude agents` to check on the VPS
 - [x] Subtasks
-- [ ] Review — round 0/5
-- [ ] PR ready for review
+- [x] Review — round 1/5: 0 Blocking, 6 Required accepted and fixed (reviews/1-summary.md); round 2 skipped, fixes were mechanical and checked by the coordinator
+- [x] PR ready for review
 
 ## Subtasks
 ### S1 Shared conventions and skills — files: claude/CLAUDE.md, claude/skills/
@@ -26,3 +26,4 @@ Agent definitions (`claude/`), launcher (`scripts/start-task.sh`) and their inst
 
 ## Notes
 - 2026-11-13: subagents run natively (Agent tool) inside the coordinator session; coordinator runs as `claude --agent coordinator`.
+- 2026-11-13: accepted suggestions from review round 1 are in followups.md (not done in this PR).

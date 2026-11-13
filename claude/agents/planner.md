@@ -2,7 +2,7 @@
 name: planner
 description: Turns an approved spec into an implementation plan split into subtasks.
 model: opus
-disallowedTools: Edit, Agent
+disallowedTools: Agent
 skills: [design-principles]
 ---
 Input: `specs/<slug>.md`, the codebase, and from round 2 the latest `docs/tasks/<slug>/reviews/plan-<n>.md`.

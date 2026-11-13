@@ -64,8 +64,8 @@ Both go to `~/.config/factory/env` (chmod 600, created by `setup-agent.sh`), whi
 
 - [ ] **Claude:** on the laptop `claude setup-token` → `CLAUDE_CODE_OAUTH_TOKEN=...` in `env`.
       The token lasts a year and only allows inference. If it leaks, revoke it and create a new one.
-- [ ] **GitHub:** account `ellie-7894` → *Settings → Developer settings → Tokens (classic)*: new token "factory", **`repo` scope only**
-      (no `workflow`, no `delete_repo`), with an expiry date → `GH_TOKEN=...` in `env`.
+- [ ] **GitHub:** account `ellie-7894` → *Settings → Developer settings → Tokens (classic)*: new token "factory", scopes **`repo` + `workflow`**
+      (`workflow` lets agents set up CI; no `delete_repo`, no `admin:*`), with an expiry date → `GH_TOKEN=...` in `env`.
       Fine-grained PATs don't work for a collaborator on someone else's personal repo, hence classic.
 - [ ] Test: `ssh factory 'gh auth status && claude -p "say hi"'`.
 - [ ] Commits are authored as `ellie-7894` (set by `setup-agent.sh`); push goes through `gh auth git-credential`.

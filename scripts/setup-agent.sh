@@ -56,7 +56,7 @@ if [[ ! -f "$CFG/env" ]]; then
   cat > "$CFG/env" <<'EOF'
 # Factory secrets. chmod 600, never commit. Exported by ~/.config/factory/shellrc.
 # CLAUDE_CODE_OAUTH_TOKEN=   # from 'claude setup-token' (run on the laptop)
-# GH_TOKEN=                  # classic PAT of ellie-7894 "factory", scope: repo only
+# GH_TOKEN=                  # classic PAT of ellie-7894 "factory", scopes: repo, workflow
 EOF
 fi
 chmod 600 "$CFG/env"

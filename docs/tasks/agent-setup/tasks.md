@@ -11,8 +11,8 @@ Agent definitions (`claude/`), launcher (`scripts/start-task.sh`) and their inst
 ## Status
 - [x] Spec committed
 - [x] Plan (inline below, no plan review: bootstrap)
-- [ ] Acceptance tests — n/a (markdown + shell); checked by `bash -n` and `claude agents` on the VPS
-- [ ] Subtasks
+- [x] Acceptance tests — n/a (markdown + shell); start-task.sh tested locally with a fake `claude`; `claude agents` to check on the VPS
+- [x] Subtasks
 - [ ] Review — round 0/5
 - [ ] PR ready for review
 
@@ -22,7 +22,7 @@ Agent definitions (`claude/`), launcher (`scripts/start-task.sh`) and their inst
 ### S2 Agent definitions — files: claude/agents/
 - [x] coordinator, planner, plan-reviewer, test-writer, implementer, 3 reviewers, triage
 ### S3 Launcher and install — files: scripts/, README.md, docs/vps-setup.md
-- [ ] start-task.sh, setup-agent.sh step, docs
+- [x] start-task.sh, setup-agent.sh step, docs
 
 ## Notes
 - 2026-11-13: subagents run natively (Agent tool) inside the coordinator session; coordinator runs as `claude --agent coordinator`.

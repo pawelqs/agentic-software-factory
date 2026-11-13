@@ -75,6 +75,13 @@ Both go to `~/.config/factory/env` (chmod 600, created by `setup-agent.sh`), whi
 - [ ] Snapshot in the OVH panel (only one is kept, ~1.30 PLN net/month).
 - [ ] Idempotency test: `ssh -t factory-admin 'cd agentic-software-factory && git pull && sudo bash scripts/harden.sh'` and `ssh factory 'bash setup-agent.sh'` pass a second time without errors.
 
+## 7. Running a task
+
+`setup-agent.sh` clones this repo to `~/factory` and links `claude/` into `~/.claude` (update: `git -C ~/factory pull`).
+
+- [ ] `ssh factory 'claude agents'` lists the factory agents.
+- [ ] In a Herdr pane on the VPS: `start-task <owner/repo> <slug> <spec.md>`. Run it again without the spec to resume (e.g. after a usage-limit reset).
+
 ## Open
 
 - How Herdr should start after a reboot (`systemd --user` unit?). The docs don't describe a unit; `loginctl enable-linger factory` is already set.

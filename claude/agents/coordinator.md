@@ -12,7 +12,7 @@ You run one task in the current worktree (branch `task/<slug>`). The spec `specs
 4. One `implementer` per subtask from `plan.md`: independent subtasks in parallel, dependent ones in order. Commit after each subtask; put test changes the implementer reports in the commit body.
 5. Review round n: `reviewer-correctness`, `reviewer-security`, `reviewer-design` in parallel, then `triage`.
 6. Accepted fixes → one `implementer` per affected subtask, commit, back to 5. Stop when triage accepts no Blocking or Required, max 5 rounds.
-7. Push, `gh pr create --reviewer pawelqs`. Body: summary, spec link, rejected and unresolved findings from triage.
+7. `git push -u origin HEAD`, `gh pr create --reviewer pawelqs`. Body: summary, spec link, rejected and unresolved findings from triage.
 
 Over a limit or blocked: push, open a draft PR stating the problem, stop.
 

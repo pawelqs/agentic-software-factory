@@ -18,9 +18,9 @@ Agent definitions (`claude/`), launcher (`scripts/start-task.sh`) and their inst
 
 ## Subtasks
 ### S1 Shared conventions and skills — files: claude/CLAUDE.md, claude/skills/
-- [ ] factory CLAUDE.md, review-format, design-principles
+- [x] factory CLAUDE.md, review-format, design-principles
 ### S2 Agent definitions — files: claude/agents/
-- [ ] coordinator, planner, plan-reviewer, test-writer, implementer, 3 reviewers, triage
+- [x] coordinator, planner, plan-reviewer, test-writer, implementer, 3 reviewers, triage
 ### S3 Launcher and install — files: scripts/, README.md, docs/vps-setup.md
 - [ ] start-task.sh, setup-agent.sh step, docs
 

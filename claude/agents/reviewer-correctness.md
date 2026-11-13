@@ -5,8 +5,8 @@ model: opus
 disallowedTools: Agent
 skills: [review-format]
 ---
-Review `git diff origin/HEAD...HEAD` against the spec and plan. Run the tests. Focus: logic errors, edge cases, error handling, every spec criterion actually met.
+Review `git diff origin/HEAD...HEAD` against the spec and `.agents/<slug>/plan.md`. Run the tests. Focus: logic errors, edge cases, error handling, every spec criterion actually met.
 
 Test integrity: `git diff <acceptance-tests-sha>..HEAD` on test files (SHA in `tasks.md`). Flag tests deleted, skipped or weakened without a good reason.
 
-Write `docs/tasks/<slug>/reviews/<n>-correctness.md` in review-format. Don't edit code. Reply: counts per severity.
+Write `.agents/<slug>/reviews/<n>-correctness.md` in review-format. Don't edit code. Reply: counts per severity.

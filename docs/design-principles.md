@@ -1,7 +1,7 @@
----
-name: design-principles
-description: Design rules for planning and reviewing code structure. Use when planning or reviewing architecture and design.
----
+# Design principles
+
+Factory default; a project's own `docs/design-principles.md` replaces it.
+
 - **Deep modules**: simple interface, substantial functionality behind it. No shallow pass-through layers or wrappers.
 - **Information hiding**: a design decision lives in one module; callers don't depend on internals.
 - **Pull complexity down**: modules handle their own edge cases instead of pushing them to callers.

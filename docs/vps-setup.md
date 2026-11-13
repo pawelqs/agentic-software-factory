@@ -80,7 +80,7 @@ Both go to `~/.config/factory/env` (chmod 600, created by `setup-agent.sh`), whi
 `setup-agent.sh` clones this repo to `~/factory` and links `claude/` into `~/.claude` (update: `git -C ~/factory pull`).
 
 - [ ] `ssh factory 'claude agents'` lists the factory agents.
-- [ ] In a Herdr pane on the VPS: `start-task <owner/repo> <slug> <spec.md>`. Run it again without the spec to resume (e.g. after a usage-limit reset).
+- [ ] In a Herdr pane on the VPS: `start-task <owner/repo> <name> <spec.md>` (gets the next free number, e.g. `007-<name>`). Run `start-task <owner/repo> <name>` to resume (e.g. after a usage-limit reset).
 
 ## Open
 

@@ -14,7 +14,7 @@ Agent definitions (`claude/`), launcher (`scripts/start-task.sh`) and their inst
 - [x] Acceptance tests — n/a (markdown + shell); start-task.sh tested locally with a fake `claude`; `claude agents` to check on the VPS
 - [x] Subtasks
 - [x] Review — round 1/5: 0 Blocking, 6 Required accepted and fixed; round 2 skipped, fixes were mechanical and checked by the coordinator
-- [x] S4 docs layout (req. 12)
+- [x] S4 docs layout (req. 12), S5 agent notes and wrap-up
 - [x] PR ready for review
 
 ## Subtasks
@@ -27,6 +27,8 @@ Agent definitions (`claude/`), launcher (`scripts/start-task.sh`) and their inst
 ### S4 Docs layout — files: claude/, docs/, scripts/start-task.sh
 - [x] `docs/features/<n>-<name>/`, design principles and code style as docs with factory defaults, temporary files in `.agents/`
 - [x] start-task.sh: numbering, resume by name, remote-only branch, `.agents/` in `info/exclude`
+### S5 Agent notes — files: claude/CLAUDE.md, claude/agents/coordinator.md
+- [x] agents talk through `.agents/<slug>/`, process ideas in `process.md`; coordinator wrap-up step before the PR
 
 ## Notes
 - 2026-11-13: subagents run natively (Agent tool) inside the coordinator session; coordinator runs as `claude --agent coordinator`.

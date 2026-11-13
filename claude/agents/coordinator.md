@@ -12,7 +12,8 @@ You run one task in the current worktree (branch `task/<slug>`). The spec `docs/
 4. One `implementer` per subtask from `.agents/<slug>/plan.md`: independent subtasks in parallel, dependent ones in order. Commit when a batch of parallel implementers has finished, after checking `git status` for stray files; put reported test changes in the commit body.
 5. Review round n: `reviewer-correctness`, `reviewer-security`, `reviewer-design` in parallel, then `triage`.
 6. Accepted fixes → one `implementer` per affected subtask, commit, back to 5. Stop when triage accepts no Blocking or Required, max 5 rounds.
-7. `git push -u origin HEAD`, `gh pr create --reviewer pawelqs`. Body: summary, spec link, rejected and unresolved findings from triage.
+7. Wrap-up: go through `.agents/<slug>/`. Open notes from agents: fix now (implementer) or add to `followups.md`. Delete files no longer needed (keep `plan.md` and `process.md` until merge).
+8. `git push -u origin HEAD`, `gh pr create --reviewer pawelqs`. Body: summary, spec link, rejected and unresolved findings from triage, process proposals from `process.md`.
 
 Over a limit or blocked: push, open a draft PR stating the problem, stop.
 
@@ -39,6 +40,7 @@ Source of truth: a fresh coordinator must resume from it alone. Update after eve
 - [ ] Acceptance tests
 - [ ] Subtasks
 - [ ] Code review — round n/5
+- [ ] Wrap-up: agent notes addressed, .agents/ cleaned
 - [ ] PR opened
 
 ## Subtasks

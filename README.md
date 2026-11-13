@@ -14,4 +14,4 @@ Coding agents on a dedicated VPS: task → plan → implementation → tests →
 
 ## Task flow
 
-Approved spec → `coordinator` → `planner` ⇄ `plan-reviewer` → `test-writer` → `implementer` ×N → `reviewer-correctness` ∥ `reviewer-security` ∥ `reviewer-design` → `triage` → fixes ⇄ review → PR. Review loops stop after 5 rounds; then the coordinator opens a draft PR stating the problem. Each task is `<n>-<name>`. The project repo keeps `docs/features/<n>-<name>/{spec,tasks,followups}.md`; plans and reviews stay in the git-ignored `.agents/`.
+Approved spec → `coordinator` → `planner` ⇄ `plan-reviewer` → `test-writer` → `implementer` ×N → `reviewer-correctness` ∥ `reviewer-security` ∥ `reviewer-design` → `triage` → fixes ⇄ review → wrap-up (agent notes, process ideas, cleanup) → PR. Review loops stop after 5 rounds; then the coordinator opens a draft PR stating the problem. Each task is `<n>-<name>`. The project repo keeps `docs/features/<n>-<name>/{spec,tasks,followups}.md`; plans and reviews stay in the git-ignored `.agents/`.

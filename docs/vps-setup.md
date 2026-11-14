@@ -4,7 +4,7 @@ OVH VPS-1 (BHS), Debian 13. [`harden.sh`](../scripts/harden.sh) and [`setup-agen
 
 **Users:** `debian` (admin, sudo) and `factory` (agents, no sudo).
 **Open to the internet:** only SSH on port 822 (`SSH_PORT` in `harden.sh`): key-only, rate-limited by ufw, fail2ban.
-**Keys of `factory`:** `/etc/ssh/authorized_keys/factory` (root-owned, so agents can't add keys), seeded from `debian`'s keys on the first run. Add or revoke keys there with sudo.
+**Keys of `factory`:** `/etc/ssh/authorized_keys/factory` (root-owned, so agents can't add keys), rebuilt by every `harden.sh` run from `debian`'s keys plus `keys/ellie-factory.pub`. Manual edits there are overwritten: add or revoke keys in those sources, then run `harden.sh` again.
 
 > **Rescue:** KVM console in the OVH panel (VPS → "KVM") or rescue mode. Find both before you start.
 

@@ -19,7 +19,7 @@ SSH_PORT="822"
 KEYS_DIR="/etc/ssh/authorized_keys"
 # Ellie's public key (optional); she signs logins via ssh-agent on the RPi: docs/design-decisions/ellie-access.md
 ELLIE_KEY="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/keys/ellie-factory.pub"
-ELLIE_KEY_OPTS="restrict,port-forwarding,pty"
+ELLIE_KEY_OPTS="restrict,pty"
 
 # Output helpers: step header, warning, fatal error.
 log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
@@ -90,19 +90,28 @@ step_agent_user() {
   if id -nG "$AGENT_USER" | tr ' ' '\n' | grep -qx sudo; then
     gpasswd -d "$AGENT_USER" sudo >/dev/null
   fi
-  install -d -m 700 -o "$AGENT_USER" -g "$AGENT_USER" "/home/$AGENT_USER/.ssh"
+  # Never touch paths in ~$AGENT_USER as root: the agent can turn them into symlinks to other users' files.
 
-  # Seeded once from the admin keys, never from ~$AGENT_USER/.ssh: the agent could have written there.
-  local keys="$KEYS_DIR/$AGENT_USER"
-  install -d -m 755 -o root -g root "$KEYS_DIR"
-  [[ -f $keys ]] || install -m 644 -o root -g root "/home/$ADMIN_USER/.ssh/authorized_keys" "$keys"
-  if [[ -s $ELLIE_KEY ]]; then
-    local key_blob
-    read -r _ key_blob _ < "$ELLIE_KEY"
-    grep -qF "$key_blob" "$keys" || echo "$ELLIE_KEY_OPTS $(<"$ELLIE_KEY")" >> "$keys"
+  # Rebuilt on every run from sources the agent can't write: admin keys + Ellie's restricted key.
+  # Manual edits are overwritten; revoke a key by removing it from its source and running this again.
+  local ellie_line=""
+  if [[ -e $ELLIE_KEY ]]; then
+    # Exactly one bare ed25519 key: options or extra lines would grant unrestricted keys.
+    [[ $(<"$ELLIE_KEY") =~ ^ssh-ed25519\ ([A-Za-z0-9+/]+=*)(\ [^[:space:]]*)?$ ]] \
+      || die "$ELLIE_KEY must be exactly one line: ssh-ed25519 <key> [comment]"
+    ellie_line="$ELLIE_KEY_OPTS ssh-ed25519 ${BASH_REMATCH[1]} ellie"
   else
     warn "No $ELLIE_KEY; Ellie has no access to $AGENT_USER."
   fi
+  install -d -m 755 -o root -g root "$KEYS_DIR"
+  local tmp
+  tmp=$(mktemp "$KEYS_DIR/.$AGENT_USER.XXXXXX")
+  # grep ends every line with a newline, also when the source file doesn't.
+  grep -v '^[[:space:]]*$' "/home/$ADMIN_USER/.ssh/authorized_keys" > "$tmp" \
+    || { rm -f "$tmp"; die "No admin keys to copy to $AGENT_USER."; }
+  [[ -z $ellie_line ]] || echo "$ellie_line" >> "$tmp"
+  chmod 644 "$tmp"
+  mv -f "$tmp" "$KEYS_DIR/$AGENT_USER"
   loginctl enable-linger "$AGENT_USER"
 }
 
@@ -140,8 +149,6 @@ EOF
   local i
   for i in {1..10}; do
     if ss -Htln "sport = :$SSH_PORT" | grep -q .; then
-      # sshd no longer reads it; removing it makes clear that the keys live in $KEYS_DIR.
-      rm -f "/home/$AGENT_USER/.ssh/authorized_keys"
       return 0
     fi
     sleep 1

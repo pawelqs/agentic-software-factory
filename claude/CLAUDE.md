@@ -7,5 +7,5 @@
 - Use `.agents/<slug>/` freely to talk to other agents: notes, questions, warnings, handoffs. Ideas to improve the process (prompts, workflow, tools) go to `.agents/<slug>/process.md` (append).
 - Project docs: `docs/vision.md`, `docs/design-principles.md`, `docs/code-style.md`, `docs/design-decisions/`. Missing design principles or code style: use the factory default in `~/factory/docs/`.
 - Reply with a short status and file paths. Details go to files.
-- Only the coordinator edits `tasks.md` and commits.
+- Only the coordinator edits `tasks.md` and commits. Commits follow Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`).
 - Out-of-scope findings (bugs, friction, ideas) go to `docs/features/<slug>/followups.md` (append); reviewers put them in their review as Suggestions.

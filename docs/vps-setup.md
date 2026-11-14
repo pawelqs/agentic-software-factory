@@ -4,6 +4,7 @@ OVH VPS-1 (BHS), Debian 13. [`harden.sh`](../scripts/harden.sh) and [`setup-agen
 
 **Users:** `debian` (admin, sudo) and `factory` (agents, no sudo).
 **Open to the internet:** only SSH on port 822 (`SSH_PORT` in `harden.sh`): key-only, rate-limited by ufw, fail2ban.
+**Keys of `factory`:** `/etc/ssh/authorized_keys/factory` (root-owned, so agents can't add keys), rebuilt by every `harden.sh` run from `debian`'s keys plus `keys/ellie-factory.pub`. Manual edits there are overwritten: add or revoke keys in those sources, then run `harden.sh` again.
 
 > **Rescue:** KVM console in the OVH panel (VPS → "KVM") or rescue mode. Find both before you start.
 
@@ -57,6 +58,14 @@ sudo -iu factory bash setup-agent.sh
   ```
 - [ ] `ssh factory-admin` and `ssh factory` work.
 - [ ] Herdr (if installed): `herdr machine add factory`, then `herdr --remote factory`.
+
+## 4a. Ellie (RPi)
+
+Ellie logs in as `factory` through an ssh-agent on the RPi host, without access to the private key: [ellie-access.md](design-decisions/ellie-access.md).
+
+- [ ] RPi (home-lab): `Host factory` in the host's `~/.ssh/config`, then `just aibox ssh-setup` (key, agent + socket proxy, ssh config for aibox) and `just aibox deploy`.
+- [ ] Public key committed as `keys/ellie-factory.pub`, then `harden.sh` run again.
+- [ ] In aibox: `ssh factory true` and `herdr machine add factory`.
 
 ## 5. Secrets (on the VPS as `factory`)
 

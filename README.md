@@ -9,7 +9,8 @@ Coding agents on a dedicated VPS: task → plan → implementation → tests →
 - [`claude/`](claude/): agent definitions, skills and shared conventions, linked into `~/.claude` by `setup-agent.sh`
 - [`docs/vps-setup.md`](docs/vps-setup.md): checklist of manual steps
 - [`docs/design-principles.md`](docs/design-principles.md), [`docs/code-style.md`](docs/code-style.md): factory defaults, used when a project has none
-- [`docs/design-decisions/`](docs/design-decisions/): lasting decisions, e.g. [hardening](docs/design-decisions/hardening.md)
+- [`docs/design-decisions/`](docs/design-decisions/): lasting decisions, e.g. [hardening](docs/design-decisions/hardening.md), [Ellie's SSH access](docs/design-decisions/ellie-access.md)
+- `keys/ellie-factory.pub`: Ellie's public key, added to `factory` by `harden.sh`
 - [`docs/features/`](docs/features/): spec, tasks and followups per task
 
 ## Task flow

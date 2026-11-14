@@ -32,48 +32,17 @@ No `from=`: the RPi has no static public IP.
 
 ## Setup
 
-### RPi host (not in the container)
+### RPi (home-lab repo)
 
-```bash
-ssh-keygen -t ed25519 -f ~/.ssh/ellie-factory -C ellie@rpi   # passphrase optional, see below
-loginctl enable-linger "$USER"                                 # /run/user/$UID survives logout
-```
-
-`~/.config/systemd/user/ellie-agent.service`:
-
-```ini
-[Unit]
-Description=ssh-agent for Ellie (factory VPS)
-
-[Service]
-Type=simple
-Environment=SSH_AUTH_SOCK=%t/ellie-agent.sock
-ExecStartPre=/bin/rm -f %t/ellie-agent.sock
-ExecStart=/usr/bin/ssh-agent -D -a %t/ellie-agent.sock
-ExecStartPost=/bin/sh -c 'sleep 1; ssh-add %h/.ssh/ellie-factory'
-
-[Install]
-WantedBy=default.target
-```
-
-`systemctl --user enable --now ellie-agent`, then `SSH_AUTH_SOCK=/run/user/$UID/ellie-agent.sock ssh-add -l` shows one key. With a passphrase, `ExecStartPost` fails and the key has to be added by hand after every reboot; without one, the key file on the host is the only copy to protect.
-
-### aibox container
-
-- `openssh-client` in the image.
-- Compose: mount `/run/user/<uid>/ellie-agent.sock:/home/node/.ssh-agent.sock` and set `SSH_AUTH_SOCK=/home/node/.ssh-agent.sock`.
-- The socket is `0600` for the host user. In rootless Podman the container user `node` maps to a subuid, not the host UID, so it gets `Permission denied`: use `userns_mode: keep-id` (check the other mounts after the switch).
-- `~/.ssh/config` in the container (no `IdentityFile`; the agent holds exactly one key):
-  ```
-  Host factory
-      HostName <VPS IP>
-      Port 822
-      User factory
-  ```
+`just aibox ssh-setup` (details in home-lab `docs/aibox.md`):
+- generates `~/.ssh/ellie-factory` on the host (no passphrase, so it loads after a reboot; never mounted into aibox);
+- `aibox-ssh-agent.service` (user unit): ssh-agent with that key, socket private in `/run/user/1000`;
+- `aibox-ssh-proxy.socket` + `.service`: `systemd-socket-proxyd` in a dir mounted read-only into aibox as `SSH_AUTH_SOCK`. ssh-agent drops connections from other UIDs, and the container user `node` is a different host UID (rootless Podman), so a direct socket mount does not work. The dir (0700 + ACL for `node`'s host UID) limits who can connect;
+- writes the container's `~/.ssh/config` (`Host factory`, port 822, user `factory`, no `IdentityFile`).
 
 ### VPS
 
-1. Commit the public key as `keys/ellie-factory.pub`.
+1. The public key is `keys/ellie-factory.pub`.
 2. `git pull && sudo bash scripts/harden.sh` (adds the key with the options above).
 
 ### Test (in the container)

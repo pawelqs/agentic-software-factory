@@ -15,6 +15,11 @@ AGENT_USER="factory"
 SWAP_SIZE="4G"
 # Below 1024: only root can bind it, so a non-root agent cannot fake sshd while it is down.
 SSH_PORT="822"
+# Root-owned authorized_keys for the agent user, so a compromised agent cannot add its own keys.
+KEYS_DIR="/etc/ssh/authorized_keys"
+# Ellie's public key (optional); she signs logins via ssh-agent on the RPi: docs/design-decisions/ellie-access.md
+ELLIE_KEY="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/keys/ellie-factory.pub"
+ELLIE_KEY_OPTS="restrict,port-forwarding,pty"
 
 # Output helpers: step header, warning, fatal error.
 log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
@@ -78,7 +83,7 @@ EOF
   systemctl enable --now unattended-upgrades >/dev/null
 }
 
-# Creates the agent user without sudo and gives it the admin SSH keys.
+# Creates the agent user without sudo and gives it root-owned SSH keys: admin keys + Ellie's restricted key.
 step_agent_user() {
   log "3/10 User $AGENT_USER (no sudo)"
   id "$AGENT_USER" >/dev/null 2>&1 || useradd -m -U -s /bin/bash "$AGENT_USER"
@@ -86,8 +91,18 @@ step_agent_user() {
     gpasswd -d "$AGENT_USER" sudo >/dev/null
   fi
   install -d -m 700 -o "$AGENT_USER" -g "$AGENT_USER" "/home/$AGENT_USER/.ssh"
-  install -m 600 -o "$AGENT_USER" -g "$AGENT_USER" \
-    "/home/$ADMIN_USER/.ssh/authorized_keys" "/home/$AGENT_USER/.ssh/authorized_keys"
+
+  # Seeded once from the admin keys, never from ~$AGENT_USER/.ssh: the agent could have written there.
+  local keys="$KEYS_DIR/$AGENT_USER"
+  install -d -m 755 -o root -g root "$KEYS_DIR"
+  [[ -f $keys ]] || install -m 644 -o root -g root "/home/$ADMIN_USER/.ssh/authorized_keys" "$keys"
+  if [[ -s $ELLIE_KEY ]]; then
+    local key_blob
+    read -r _ key_blob _ < "$ELLIE_KEY"
+    grep -qF "$key_blob" "$keys" || echo "$ELLIE_KEY_OPTS $(<"$ELLIE_KEY")" >> "$keys"
+  else
+    warn "No $ELLIE_KEY; Ellie has no access to $AGENT_USER."
+  fi
   loginctl enable-linger "$AGENT_USER"
 }
 
@@ -110,6 +125,10 @@ AllowUsers $ADMIN_USER $AGENT_USER
 LoginGraceTime 20
 AllowAgentForwarding no
 X11Forwarding no
+
+# The agent cannot edit this file. A Match block in an included file ends with that file.
+Match User $AGENT_USER
+    AuthorizedKeysFile $KEYS_DIR/%u
 EOF
   if ! sshd -t; then
     rm -f "$conf"
@@ -120,7 +139,11 @@ EOF
   # Open sessions survive the reload. Make sure new ones can connect before ufw closes port 22.
   local i
   for i in {1..10}; do
-    ss -Htln "sport = :$SSH_PORT" | grep -q . && return 0
+    if ss -Htln "sport = :$SSH_PORT" | grep -q .; then
+      # sshd no longer reads it; removing it makes clear that the keys live in $KEYS_DIR.
+      rm -f "/home/$AGENT_USER/.ssh/authorized_keys"
+      return 0
+    fi
     sleep 1
   done
   # sshd may have exited after a failed bind, so restart (open sessions survive it) instead of reload.
@@ -223,6 +246,9 @@ step_verify() {
   log "10/10 Checks"
   echo "--- sshd"
   sshd -T | grep -Ei '^(passwordauthentication|kbdinteractiveauthentication|port|permitrootlogin|allowusers|allowagentforwarding) '
+  echo "--- $AGENT_USER keys"
+  sshd -T -C "user=$AGENT_USER,host=localhost,addr=127.0.0.1" | grep -i '^authorizedkeysfile '
+  cut -c1-80 "$KEYS_DIR/$AGENT_USER"
   echo "--- ufw"
   ufw status verbose
   echo "--- fail2ban"

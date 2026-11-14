@@ -38,7 +38,7 @@ No `from=`: the RPi has no static public IP.
 - generates `~/.ssh/ellie-factory` on the host (no passphrase, so it loads after a reboot; never mounted into aibox);
 - `aibox-ssh-agent.service` (user unit): ssh-agent with that key, socket private in `/run/user/1000`;
 - `aibox-ssh-proxy.socket` + `.service`: `systemd-socket-proxyd` in a dir mounted read-only into aibox as `SSH_AUTH_SOCK`. ssh-agent drops connections from other UIDs, and the container user `node` is a different host UID (rootless Podman), so a direct socket mount does not work. The dir (0700 + ACL for `node`'s host UID) limits who can connect;
-- writes the container's `~/.ssh/config` (`Host factory`, port 822, user `factory`, no `IdentityFile`).
+- from `Host factory` in the RPi host's `~/.ssh/config`, generates the `factory` entry (port 822, user `factory`, `StrictHostKeyChecking yes`) and a pinned VPS host key, mounted read-only as `/etc/ssh/ssh_config.d/factory.conf` and `/etc/ssh/ssh_known_hosts`. The container's `~/.ssh` stays writable for Herdr; the agent can override these only in its own `~/.ssh`, which affects only its own connections.
 
 ### VPS
 

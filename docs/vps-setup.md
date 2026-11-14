@@ -63,7 +63,7 @@ sudo -iu factory bash setup-agent.sh
 
 Ellie logs in as `factory` through an ssh-agent on the RPi host, without access to the private key: [ellie-access.md](design-decisions/ellie-access.md).
 
-- [ ] RPi: key + `ellie-agent` user service; aibox: `openssh-client`, mounted agent socket, `~/.ssh/config`.
+- [ ] RPi (home-lab): `Host factory` in the host's `~/.ssh/config`, then `just aibox ssh-setup` (key, agent + socket proxy, ssh config for aibox) and `just aibox deploy`.
 - [ ] Public key committed as `keys/ellie-factory.pub`, then `harden.sh` run again.
 - [ ] In aibox: `ssh factory true` and `herdr machine add factory`.
 

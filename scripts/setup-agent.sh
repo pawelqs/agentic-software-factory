@@ -21,7 +21,7 @@ die()  { printf '\033[1;31m[error] %s\033[0m\n' "$*" >&2; exit 1; }
 cd ~
 export PATH="$HOME/.local/bin:$HOME/.bun/bin:$PATH"
 
-log "1/4 bun, Claude Code, uv, Herdr"
+log "1/5 bun, Claude Code, uv, Herdr"
 # ~/.bun/bin is already on PATH, so the bun installer skips editing shell rc files (SHELL=/bin/sh is a fallback).
 [[ -x ~/.bun/bin/bun ]] || curl -fsSL https://bun.sh/install | env SHELL=/bin/sh bash
 [[ -x ~/.local/bin/claude ]] || curl -fsSL https://claude.ai/install.sh | bash
@@ -31,7 +31,7 @@ if ! command -v herdr >/dev/null && ! curl -fsSL https://herdr.dev/install.sh | 
   warn "Herdr install failed. See https://herdr.dev/docs/install/ (tmux is installed as a fallback)."
 fi
 
-log "2/4 git"
+log "2/5 git"
 git config --global --unset-all credential.https://github.com.helper || true
 git config --global --add credential.https://github.com.helper ''
 git config --global --add credential.https://github.com.helper '!gh auth git-credential'
@@ -39,7 +39,7 @@ git config --global user.name "$GIT_NAME"
 git config --global user.email "$GIT_EMAIL"
 git config --global init.defaultBranch main
 
-log "3/4 Shell environment"
+log "3/5 Shell environment"
 install -d -m 700 "$HOME/.config" "$CFG"
 cat > "$CFG/shellrc" <<'EOF'
 # Managed by setup-agent.sh. Sourced at the top of ~/.bashrc, so it also works for 'ssh factory cmd'.
@@ -56,7 +56,7 @@ if [[ ! -f "$CFG/env" ]]; then
   cat > "$CFG/env" <<'EOF'
 # Factory secrets. chmod 600, never commit. Exported by ~/.config/factory/shellrc.
 # CLAUDE_CODE_OAUTH_TOKEN=   # from 'claude setup-token' (run on the laptop)
-# GH_TOKEN=                  # classic PAT of ellie-7894 "factory", scope: repo only
+# GH_TOKEN=                  # classic PAT of ellie-7894 "factory", scopes: repo, workflow
 EOF
 fi
 chmod 600 "$CFG/env"
@@ -67,7 +67,25 @@ if ! grep -qF '.config/factory/shellrc' ~/.bashrc; then
   mv ~/.bashrc.new ~/.bashrc
 fi
 
-log "4/4 Checks (fresh login shell)"
+log "4/5 Factory agents"
+# Agent definitions live in this repo; ~/.claude links to a clone that 'git pull' updates.
+FACTORY="$HOME/factory"
+if [[ -d $FACTORY/.git ]]; then
+  git -C "$FACTORY" pull -q --ff-only || warn "Could not update $FACTORY; using the current checkout."
+else
+  git clone -q https://github.com/pawelqs/agentic-software-factory "$FACTORY"
+fi
+install -d -m 700 ~/.claude ~/projects ~/worktrees
+for f in agents skills CLAUDE.md; do
+  if [[ -e ~/.claude/$f && ! -L ~/.claude/$f ]]; then
+    warn "~/.claude/$f exists and is not a link; leaving it."
+  else
+    ln -sfn "$FACTORY/claude/$f" ~/.claude/$f
+  fi
+done
+ln -sfn "$FACTORY/scripts/start-task.sh" ~/.local/bin/start-task
+
+log "5/5 Checks (fresh login shell)"
 env -i HOME="$HOME" USER="$USER" LOGNAME="$USER" PATH=/usr/bin:/bin bash -lc '
   for c in bun claude uv gh git tmux herdr; do
     printf "%-7s " "$c"

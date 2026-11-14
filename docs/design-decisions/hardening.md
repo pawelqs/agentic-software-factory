@@ -11,7 +11,7 @@ The main risks are not host-level:
 - which can read `GH_TOKEN` and `CLAUDE_CODE_OAUTH_TOKEN` from `~/.config/factory/env`.
 
 Hardening does not stop that. These do:
-- narrow tokens: classic PAT with `repo` scope only (no `workflow`), Claude token for inference only;
+- narrow tokens: classic PAT of the bot account (`repo` + `workflow`, only the bot's repos), Claude token for inference only;
 - branch protection on `main`, manual merges only;
 - nothing personal or production on the VPS;
 - periodic rebuild from the scripts.
@@ -33,6 +33,7 @@ Hardening does not stop that. These do:
 | **No login alerts or audit trail** (auditd, notifications) | A compromise may be noticed late. | Skipped for now; the VPS is disposable. |
 | **Same SSH key for `debian` and `factory`** | A stolen laptop key gives admin access. | Accepted for a single-person setup. |
 | **SSH is public** (port 822) | Mostly log noise; key-only auth makes brute force useless. The non-standard port only cuts noise from mass scanners, it hides nothing from a targeted scan. | Accepted until Tailscale (or another private access path) comes back. |
+| **GitHub token has `workflow` scope** | A malicious package can push workflow changes; they run on task branches with that repo's Actions secrets. | Accepted: agents must set up CI in new projects. The bot's account holds only factory repos; review every `.github/` change before merge. |
 | **Linger enabled for `factory`** | Lets user services start after a reboot without a login. Marginal: malware running as `factory` has easier persistence options (`~/.bashrc`, background processes). | Kept for a future Herdr/orchestrator user service. |
 
 ## Limits of this assessment
